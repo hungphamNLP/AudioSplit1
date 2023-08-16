@@ -1,0 +1,64 @@
+# ############################################################################
+# Model: ECAPA-TDNN for Audio Classification
+# ############################################################################
+
+# Pretrain folder (HuggingFace)
+pretrained_path: dragonSwing/audify
+
+# Feature parameters
+n_mels: 80
+
+# Output parameters
+out_n_neurons: 5 # Possible languages in the dataset
+
+# Model params
+compute_features: !new:speechbrain.lobes.features.Fbank
+  n_mels: !ref <n_mels>
+
+mean_var_norm: !new:speechbrain.processing.features.InputNormalization
+  norm_type: sentence
+  std_norm: False
+
+# Embedding Model
+CNN: !new:speechbrain.lobes.models.convolution.ConvolutionFrontEnd
+  input_shape: (null, null, 80)
+  num_blocks: 3
+  num_layers_per_block: 1
+  out_channels: (128, 256, 256)
+  kernel_sizes: (3, 3, 1)
+  strides: (2, 2, 1)
+  residuals: (False, False, False)
+  conv_module: !name:speechbrain.nnet.CNN.Conv1d
+  norm: !name:speechbrain.nnet.normalization.BatchNorm1d
+
+pooling: !new:speechbrain.nnet.pooling.AdaptivePool
+  output_size: 1
+
+embedding: !new:torch.nn.ModuleList
+  - [!ref <CNN>, !ref <pooling>]
+
+embedding_model: !new:speechbrain.nnet.containers.LengthsCapableSequential
+  CNN: !ref <CNN>
+  pooling: !ref <pooling>
+
+classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
+  input_size: 256
+  out_neurons: !ref <out_n_neurons>
+
+modules:
+  compute_features: !ref <compute_features>
+  mean_var_norm: !ref <mean_var_norm>
+  embedding_model: !ref <embedding_model>
+  classifier: !ref <classifier>
+
+label_encoder: !new:speechbrain.dataio.encoder.CategoricalEncoder
+
+pretrainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
+  loadables:
+    embedding_model: !ref <embedding>
+    classifier: !ref <classifier>
+    label_encoder: !ref <label_encoder>
+  paths:
+    embedding_model: !ref <pretrained_path>/embedding_model.ckpt
+    classifier: !ref <pretrained_path>/classifier.ckpt
+    label_encoder: !ref <pretrained_path>/label_encoder.txt
