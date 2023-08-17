@@ -1,6 +1,9 @@
 
 from utils import read_frames_from_file,convert_audio
 from scipy.io import wavfile
+import argparse
+import os
+
 ## convert file '''
 # tyle file mp3,...
 # rate=16k
@@ -36,4 +39,17 @@ def main(audio_file,new_audio_file,folder_save_file_split):
     Split_VAD(new_audio_file,folder_save_file_split)
 
 if __name__ =='__main__':
-    main('quangnam.wav','file_new.wav','Audio_path')
+    # main('quangnam.wav','file_new.wav','Audio_path')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file_audio',type=str,required=True,help="Choose a file audio to split with .mp3,.wav")
+    parser.add_argument('--file_audio_new',type=str,required=True,help='file audio convert to normalize')
+    parser.add_argument('--folder_split_file',type=str,required=True,help='folder save file wav')
+    
+    args = parser.parse_args()
+    os.mkdir(args.folder_split_file)
+
+    main(args.file_audio,args.file_audio_new,args.folder_split_file)
+    
+
+    
