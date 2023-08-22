@@ -47,7 +47,8 @@ if __name__ =='__main__':
     parser.add_argument('--folder_split_file',type=str,required=True,help='folder save file wav')
     
     args = parser.parse_args()
-    os.mkdir(args.folder_split_file)
+    if not os.path.exists(args.folder_split_file):
+        os.mkdir(args.folder_split_file)
 
     main(args.file_audio,args.file_audio_new,args.folder_split_file)
     
